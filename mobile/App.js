@@ -1,19 +1,14 @@
-import React from 'react';
-import { SafeAreaView, StyleSheet } from 'react-native';
-import HomeScreen from './src/screens/HomeScreen';
+import 'react-native-gesture-handler';
+import { PaperProvider } from 'react-native-paper';
+import { AuthProvider } from './src/contexts/AuthContext';
+import Navigation from './src/navigation';
 
-const App = () => {
+export default function App() {
   return (
-    <SafeAreaView style={styles.container}>
-      <HomeScreen />
-    </SafeAreaView>
+    <PaperProvider>
+      <AuthProvider>
+        <Navigation />
+      </AuthProvider>
+    </PaperProvider>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-
-export default App; 
+} 

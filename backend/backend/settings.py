@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +26,7 @@ SECRET_KEY = 'django-insecure-uc1ks@_dkj(&226s#0l)o%8(l7x@wj@v=f09g*pqs$)8-3+t#^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']  # Временно для разработки
 
 
 # Application definition
@@ -140,4 +141,88 @@ REST_FRAMEWORK = {
     ]
 }
 
-CORS_ALLOW_ALL_ORIGINS = True  # Только для разработки
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:19006",
+    "http://localhost:8000",
+]
+
+CORS_ALLOW_ALL_ORIGINS = True  # Временно для разработки
+ALLOWED_HOSTS = ['*']  # Временно для разработки
+
+# Добавим дополнительные настройки CORS
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'Формат: Token your_token_here'
+        }
+    },
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+    'SUPPORTED_SUBMIT_METHODS': [
+        'get',
+        'post',
+        'put',
+        'delete',
+        'patch'
+    ],
+    'OPERATIONS_SORTER': 'alpha',
+    'VALIDATOR_URL': None,
+    'DEFAULT_MODEL_RENDERING': 'example',
+    'DEFAULT_MODEL_DEPTH': 3,
+    'DOC_EXPANSION': 'list',
+    'DEFAULT_INFO': {
+        'description': """
+        # Документация API фитнес-приложения
+        
+        ## Аутентификация
+        Для авторизации используйте токен в заголовке:
+        `Authorization: Token your_token_here`
+        
+        ## Примеры запросов
+        ### Авторизация
+        POST /api/auth/login/
+        ```json
+        {
+            "email": "user@example.com",
+            "password": "your_password123"
+        }
+        ```
+        
+        ### Регистрация
+        POST /api/auth/register/
+        ```json
+        {
+            "email": "newuser@example.com",
+            "username": "newusername",
+            "password": "secure_password123",
+            "password2": "secure_password123"
+        }
+        ```
+        """
+    }
+}

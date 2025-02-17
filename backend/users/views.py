@@ -19,63 +19,162 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(
-        request_body=LoginSerializer,
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['email', 'password'],
+            properties={
+                'email': openapi.Schema(type=openapi.TYPE_STRING, example='user@example.com'),
+                'password': openapi.Schema(type=openapi.TYPE_STRING, example='your_password123'),
+            }
+        ),
         responses={
             200: openapi.Response(
                 description="Успешная авторизация",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'user': openapi.Schema(type=openapi.TYPE_OBJECT),
-                        'access': openapi.Schema(type=openapi.TYPE_STRING),
-                        'refresh': openapi.Schema(type=openapi.TYPE_STRING),
+                        'user': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, example=1),
+                                'email': openapi.Schema(type=openapi.TYPE_STRING, example='user@example.com'),
+                                'username': openapi.Schema(type=openapi.TYPE_STRING, example='username'),
+                            }
+                        ),
+                        'token': openapi.Schema(type=openapi.TYPE_STRING, example='9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b'),
                     }
                 )
-            )
-        }
+            ),
+            400: 'Неверные учетные данные'
+        },
+        operation_description="Авторизация пользователя",
+        security=[{'Bearer': []}]
     )
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data['user']
-            refresh = RefreshToken.for_user(user)
+            token, created = Token.objects.get_or_create(user=user)
             return Response({
                 'user': UserSerializer(user).data,
-                'access': str(refresh.access_token),
-                'refresh': str(refresh),
+                'token': token.key,
             })
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        """
+        Пример запроса для авторизации:
+        {
+            "email": "user@example.com",
+            "password": "your_password123"
+        }
+        """
+        example_request = {
+            "email": "user@example.com",
+            "password": "your_password123"
+        }
+        example_response = {
+            "user": {
+                "id": 1,
+                "email": "user@example.com",
+                "username": "username"
+            },
+            "token": "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b"
+        }
+        return Response({
+            "description": "Endpoint для авторизации пользователя",
+            "method": "POST",
+            "request_example": example_request,
+            "response_example": example_response,
+            "authorization": "Не требуется",
+            "errors": {
+                "400": "Неверные учетные данные",
+                "401": "Неавторизован"
+            }
+        })
 
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @swagger_auto_schema(
-        request_body=RegisterSerializer,
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['email', 'username', 'password', 'password2'],
+            properties={
+                'email': openapi.Schema(type=openapi.TYPE_STRING, example='newuser@example.com'),
+                'username': openapi.Schema(type=openapi.TYPE_STRING, example='newusername'),
+                'password': openapi.Schema(type=openapi.TYPE_STRING, example='secure_password123'),
+                'password2': openapi.Schema(type=openapi.TYPE_STRING, example='secure_password123'),
+            }
+        ),
         responses={
             201: openapi.Response(
                 description="Успешная регистрация",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'user': openapi.Schema(type=openapi.TYPE_OBJECT),
-                        'access': openapi.Schema(type=openapi.TYPE_STRING),
-                        'refresh': openapi.Schema(type=openapi.TYPE_STRING),
+                        'user': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, example=1),
+                                'email': openapi.Schema(type=openapi.TYPE_STRING, example='newuser@example.com'),
+                                'username': openapi.Schema(type=openapi.TYPE_STRING, example='newusername'),
+                            }
+                        ),
+                        'token': openapi.Schema(type=openapi.TYPE_STRING, example='9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b'),
                     }
                 )
-            )
-        }
+            ),
+            400: 'Ошибка валидации данных'
+        },
+        operation_description="Регистрация нового пользователя"
     )
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            refresh = RefreshToken.for_user(user)
+            token, created = Token.objects.get_or_create(user=user)
             return Response({
                 'user': UserSerializer(user).data,
-                'access': str(refresh.access_token),
-                'refresh': str(refresh),
+                'token': token.key,
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        """
+        Пример запроса для регистрации:
+        {
+            "email": "newuser@example.com",
+            "username": "newusername",
+            "password": "secure_password123",
+            "password2": "secure_password123"
+        }
+        """
+        example_request = {
+            "email": "newuser@example.com",
+            "username": "newusername",
+            "password": "secure_password123",
+            "password2": "secure_password123"
+        }
+        example_response = {
+            "user": {
+                "id": 1,
+                "email": "newuser@example.com",
+                "username": "newusername"
+            },
+            "token": "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b"
+        }
+        return Response({
+            "description": "Endpoint для регистрации нового пользователя",
+            "method": "POST",
+            "request_example": example_request,
+            "response_example": example_response,
+            "authorization": "Не требуется",
+            "errors": {
+                "400": "Ошибка валидации данных",
+                "409": "Пользователь с таким email уже существует"
+            }
+        })
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
